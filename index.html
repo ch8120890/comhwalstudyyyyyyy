@@ -181,10 +181,10 @@ function home(u){
  let inline=(html)=>html||'<span class="sub">아직 기록 없음</span>';
  return `<div class="top"><div class="meta">컴활 1급 · 필기</div><h1>${names[u]} <span style="float:right;font-size:13px">${dday(u)}</span></h1></div><div class="content">
  <div class="card today"><div class="date">${today()}</div><b>오늘의 공부</b>
- <div class="row"><span class="study-kind">필기 회독</span><span class="study-main">${todayR.length?todayR.map(x=>`<span class="record-detail">${x.count}회독</span><span class="record-actions"><button class="btn outline" onclick="editRecord('reading',${x._i})">수정</button><button class="btn outline delete-btn" data-delete-type="reading" data-delete-index="${x._i}">삭제</button></span>`).join('<br>'):'<span class="empty-detail">아직 기록 없음</span>'}</span><button class="btn mini-action" onclick="openM('reading')">+ 기록</button></div>
- <div class="row"><span class="study-kind">기출</span><span class="study-main">${todayE.length?todayE.map(x=>{let wc=x.wrongCount??(x.total-x.correct),pct=x.total?((x.correct/x.total)*100).toFixed(1):0;return `<span class="record-detail">${x.year}년 ${x.round}회 · ${x.correct}/${x.total} · ${pct}%</span><span class="record-actions"><button class="btn outline" onclick="editRecord('exam',${x._i})">수정</button><button class="btn outline delete-btn" data-delete-type="exam" data-delete-index="${x._i}">삭제</button></span>`}).join('<br>'):'<span class="empty-detail">아직 기록 없음</span>'}</span><button class="btn mini-action" onclick="openM('exam')">+ 기록</button></div>
+ <div class="row"><span class="study-kind">필기 회독</span><span class="study-main">${todayR.length?todayR.map(x=>`<span class="record-detail">${x.count}회독</span><span class="record-actions"><button class="btn outline" onclick="editRecord('reading',${x._i})">수정</button><button class="btn outline delete-btn" data-delete-type="reading" data-delete-index="${x._i}">삭제</button></span>`).join('<br>'):'<span class="empty-detail">아직 기록 없음</span>'}</span><button class="btn mini-action" onclick="openM('reading')">+ 등록</button></div>
+ <div class="row"><span class="study-kind">기출</span><span class="study-main">${todayE.length?todayE.map(x=>{let wc=x.wrongCount??(x.total-x.correct),pct=x.total?((x.correct/x.total)*100).toFixed(1):0;return `<span class="record-detail">${x.year}년 ${x.round}회 · ${x.correct}/${x.total} · ${pct}%</span><span class="record-actions"><button class="btn outline" onclick="editRecord('exam',${x._i})">수정</button><button class="btn outline delete-btn" data-delete-type="exam" data-delete-index="${x._i}">삭제</button></span>`}).join('<br>'):'<span class="empty-detail">아직 기록 없음</span>'}</span><button class="btn mini-action" onclick="openM('exam')">+ 등록</button></div>
  <div class="row"><span class="study-kind">오답</span><span class="study-main">${todayW.length?todayW.map(x=>`<span class="record-detail">${escapeHtml(x.question||'문제')}번${x.subject?' · '+escapeHtml(x.subject):''}</span><span class="record-actions"><button class="btn outline" onclick="editRecord('wrong',${x._i})">수정</button><button class="btn outline delete-btn" data-delete-type="wrong" data-delete-index="${x._i}">삭제</button></span>`).join('<br>'):'<span class="empty-detail">아직 기록 없음</span>'}</span><button class="btn mini-action" onclick="openM('wrong')">+ 등록</button></div>
- <div class="row"><span class="study-kind">공부시간</span><span class="study-main">${tm?`<span class="record-detail">${fmt(tm.m)}</span><span class="record-actions"><button class="btn outline" onclick="editRecord('minutes',${mx})">수정</button><button class="btn outline delete-btn" data-delete-type="minutes" data-delete-index="${mx}">삭제</button></span>`:'<span class="empty-detail">선택 입력</span>'}</span><button class="btn mini-action" onclick="openM('minutes')">${tm?'변경':'+ 기록'}</button></div>
+ <div class="row"><span class="study-kind">공부시간</span><span class="study-main">${tm?`<span class="record-detail">${fmt(tm.m)}</span><span class="record-actions"><button class="btn outline" onclick="editRecord('minutes',${mx})">수정</button><button class="btn outline delete-btn" data-delete-type="minutes" data-delete-index="${mx}">삭제</button></span>`:'<span class="empty-detail">선택 입력</span>'}</span><button class="btn mini-action" onclick="openM('minutes')">${tm?'변경':'+ 등록'}</button></div>
  </div>
  <div class="card"><div class="title">누적 현황</div>
  <div class="summary-grid">
@@ -386,6 +386,45 @@ window.closeM=()=>{modal=null;render()}
 window.saveReading=()=>{selectedPersonalDate=today();state.readings.push({u:tab,d:today(),subject:'필기 요약본',count:+document.getElementById('count').value||1});save();closeM()}
 window.saveExam=()=>{selectedPersonalDate=today();let total=+document.getElementById('total').value||60,wc=Math.max(0,+document.getElementById('wrongCount').value||0);wc=Math.min(total,wc);let correct=total-wc,year=+document.getElementById('year').value,round=+document.getElementById('round').value;state.exams.push({u:tab,d:today(),year,round,total,correct,wrongCount:wc});save();if(wc>0){openWrongAfterExam(year,round,wc)}else{closeM()}}
 
+
+window.cancelWrongModal=function(){
+ window.bulkEditIndex=null;
+ modal=null;
+ render();
+}
+window.copyBulkPrompt=function(){
+ const prompt=`컴퓨터활용능력 1급 필기 오답 문제 이미지를 분석해서 아래 형식으로만 정리해줘.
+
+[중요 규칙]
+- 이미지에 있는 오답 문제를 빠짐없이 문제별로 분리해줘.
+- 문제번호, 문제내용, 모든 보기를 그대로 적어줘.
+- 보기 개수는 4개로 고정하지 말고 이미지에 있는 만큼 모두 적어줘.
+- 정답은 보기 번호를 숫자로 적어줘.
+- 해설, 설명, 인사말, 마크다운 표, 코드블록은 넣지 마.
+- 문제 사이에는 빈 줄을 한 줄 넣어줘.
+- 읽을 수 없는 부분은 추측하지 말고 [확인 필요]라고 적어줘.
+- 반드시 아래 형식을 정확히 반복해줘.
+
+문제번호: 12
+문제내용: 문제의 전체 내용
+보기: ① 첫 번째 보기
+보기: ② 두 번째 보기
+보기: ③ 세 번째 보기
+보기: ④ 네 번째 보기
+정답: 3
+
+문제가 여러 개라면 위 형식을 문제마다 반복해줘.`;
+ const done=()=>alert('ChatGPT 요청 프롬프트를 복사했어요. 캡처와 함께 ChatGPT에 붙여넣어 주세요.');
+ if(navigator.clipboard&&navigator.clipboard.writeText){
+   navigator.clipboard.writeText(prompt).then(done).catch(()=>fallbackCopy(prompt,done));
+ }else fallbackCopy(prompt,done);
+}
+window.fallbackCopy=function(text,done){
+ let ta=document.createElement('textarea');ta.value=text;ta.style.position='fixed';ta.style.opacity='0';
+ document.body.appendChild(ta);ta.focus();ta.select();
+ try{document.execCommand('copy');done();}catch(e){alert('자동 복사에 실패했어요. 프롬프트를 직접 선택해 복사해 주세요.');}
+ ta.remove();
+}
 window.openSingleWrong=function(prefill){
  prefill=prefill||{}; window.singleChoices=Array.isArray(prefill.choices)&&prefill.choices.length?prefill.choices.slice():['','','',''];
  modal=`<div class="modal"><div class="sheet"><h3>오답 개별등록</h3>
@@ -394,7 +433,8 @@ window.openSingleWrong=function(prefill){
  <div id="singleChoiceFields"></div>
  <button class="btn outline" style="width:100%;margin-bottom:12px" onclick="addSingleChoice()">+ 보기 추가</button>
  <div class="field"><label>정답 보기 번호</label><input id="answer" type="number" min="1" value="${escapeHtml(prefill.answer||'1')}" placeholder="예: 4"></div>
- <button class="btn primary" style="width:100%" onclick="saveWrong()">오답 저장</button></div></div>`;render();renderSingleChoices();
+ <button class="btn primary" style="width:100%" onclick="saveWrong()">오답 저장</button>
+ <button class="btn outline" style="width:100%;margin-top:8px" onclick="cancelWrongModal()">닫기</button></div></div>`;render();renderSingleChoices();
 }
 window.renderSingleChoices=function(){
  let box=document.getElementById('singleChoiceFields');if(!box)return;
@@ -407,9 +447,11 @@ window.removeSingleChoice=function(i){syncSingleChoices();if(window.singleChoice
 window.openBulkWrong=function(){
  modal=`<div class="modal"><div class="sheet"><h3>오답 일괄등록</h3>
  <div class="capture-note">ChatGPT에서 아래 형식으로 여러 문제를 정리한 뒤 통째로 붙여넣어 주세요. 보기 개수는 제한 없습니다.</div>
- <div class="bulk-example">문제번호: 12<br>문제내용: 다음 중 ...?<br>보기: ① 첫 번째 보기<br>보기: ② 두 번째 보기<br>보기: ③ 세 번째 보기<br>보기: ④ 네 번째 보기<br>정답: 3<br><br>문제번호: 17<br>문제내용: ...<br>보기: ① ...<br>보기: ② ...<br>정답: 2</div>
+ <button class="btn outline" style="width:100%;margin-top:10px" onclick="copyBulkPrompt()">ChatGPT 추출 요청 프롬프트 복사</button>
+ <div class="bulk-example"><b>붙여넣기 형식 예시</b><br><br>문제번호: 12<br>문제내용: 다음 중 ...?<br>보기: ① 첫 번째 보기<br>보기: ② 두 번째 보기<br>보기: ③ 세 번째 보기<br>보기: ④ 네 번째 보기<br>정답: 3<br><br>문제번호: 17<br>문제내용: ...<br>보기: ① ...<br>보기: ② ...<br>정답: 2</div>
  <div class="field"><textarea id="bulkWrongText" class="bulk-area" placeholder="여기에 여러 문제를 한 번에 붙여넣어 주세요."></textarea></div>
- <button class="btn primary" style="width:100%" onclick="previewBulkWrong()">문제별로 나누기</button></div></div>`;render();
+ <button class="btn primary" style="width:100%" onclick="previewBulkWrong()">문제별로 나누기</button>
+ <button class="btn outline" style="width:100%;margin-top:8px" onclick="cancelWrongModal()">닫기</button></div></div>`;render();
 }
 window.parseBulkWrongs=function(text){
  let lines=text.replace(/\r/g,'').split('\n'), out=[],cur=null;
@@ -434,7 +476,8 @@ window.previewBulkWrong=function(){
  modal=`<div class="modal"><div class="sheet"><h3>${items.length}문제 인식 완료</h3><div class="capture-note">등록하면 각 문제가 개별 오답으로 저장됩니다. 잘못된 문제는 등록 후 각각 수정할 수 있어요.</div>
  <div class="bulk-preview">${items.map((x,i)=>`<div class="bulk-item"><div class="bulk-item-title">${escapeHtml(x.question||'?')}번 · 보기 ${x.choices.length}개 · 정답 ${escapeHtml(x.answer||'?')}번</div><div>${escapeHtml(x.questionText||'문제내용 없음')}</div><button class="btn outline" style="margin-top:8px" onclick="editBulkItem(${i})">이 문제 확인/수정</button></div>`).join('')}</div>
  <button class="btn primary" style="width:100%;margin-top:12px" onclick="saveBulkWrongs()">문제별로 일괄 저장</button>
- <button class="btn outline" style="width:100%;margin-top:8px" onclick="openBulkWrong()">다시 붙여넣기</button></div></div>`;render();
+ <button class="btn outline" style="width:100%;margin-top:8px" onclick="openBulkWrong()">다시 붙여넣기</button>
+ <button class="btn outline" style="width:100%;margin-top:8px" onclick="cancelWrongModal()">닫기</button></div></div>`;render();
 }
 window.editBulkItem=function(i){let x=window.bulkWrongItems[i];window.bulkEditIndex=i;openSingleWrong(x)}
 window.saveBulkWrongs=function(){
@@ -452,7 +495,8 @@ window.saveWrong=()=>{
  if(Number.isInteger(window.bulkEditIndex)&&window.bulkWrongItems){
    window.bulkWrongItems[window.bulkEditIndex]=item;window.bulkEditIndex=null;
    let items=window.bulkWrongItems;
-   modal=`<div class="modal"><div class="sheet"><h3>${items.length}문제 확인</h3><div class="bulk-preview">${items.map((x,i)=>`<div class="bulk-item"><div class="bulk-item-title">${escapeHtml(x.question)}번 · 보기 ${x.choices.length}개 · 정답 ${escapeHtml(x.answer)}번</div><div>${escapeHtml(x.questionText)}</div><button class="btn outline" style="margin-top:8px" onclick="editBulkItem(${i})">이 문제 확인/수정</button></div>`).join('')}</div><button class="btn primary" style="width:100%;margin-top:12px" onclick="saveBulkWrongs()">문제별로 일괄 저장</button></div></div>`;render();return;
+   modal=`<div class="modal"><div class="sheet"><h3>${items.length}문제 확인</h3><div class="bulk-preview">${items.map((x,i)=>`<div class="bulk-item"><div class="bulk-item-title">${escapeHtml(x.question)}번 · 보기 ${x.choices.length}개 · 정답 ${escapeHtml(x.answer)}번</div><div>${escapeHtml(x.questionText)}</div><button class="btn outline" style="margin-top:8px" onclick="editBulkItem(${i})">이 문제 확인/수정</button></div>`).join('')}</div><button class="btn primary" style="width:100%;margin-top:12px" onclick="saveBulkWrongs()">문제별로 일괄 저장</button>
+ <button class="btn outline" style="width:100%;margin-top:8px" onclick="cancelWrongModal()">닫기</button></div></div>`;render();return;
  }
  state.wrongs.push({u:tab,d:today(),...item,quizCorrect:0,quizWrong:0,repeatWrong:false});save();closeM()
 }
