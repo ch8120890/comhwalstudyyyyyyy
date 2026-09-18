@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+<title>ㅂㅎㅇㅎㄴ 컴활 1급 도전 프로젝트</title>
+<style>
+:root{--bg:#F1F2F5;--card:#fff;--dark:#20242C;--text:#1B1E24;--soft:#6B7280;--border:#E5E7EB;--hana:#E1604A;--hyung:#2E8B80;--num:#F2B84B;--green:#2E9E6D}
+*{box-sizing:border-box}html,body{margin:0}body{background:#D9DBE0;font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Malgun Gothic","Segoe UI",sans-serif;color:var(--text)}
+#app{max-width:480px;margin:auto;min-height:100vh;background:var(--bg);padding-bottom:74px}.top{padding:20px 16px 12px}.meta{font-size:12px;color:var(--soft)}h1{font-size:22px;margin:6px 0}
+.tabs{position:fixed;bottom:0;left:50%;transform:translateX(-50%);max-width:480px;width:100%;display:flex;background:#fff;border-top:1px solid var(--border);padding:8px}.tabs button{flex:1;border:0;background:none;padding:12px;font-weight:700;color:#9CA3AF}.tabs button.on{color:var(--text)}
+.content{padding:0 16px 24px}.card{background:#fff;border:1px solid var(--border);border-radius:16px;padding:16px;margin-bottom:12px}.today{background:var(--dark);color:#fff;border:0;padding:20px}.date,.label,.sub{font-size:13px;color:#9AA1AE}.minutes{font-size:38px;font-weight:800;color:var(--num);margin:8px 0 14px}
+.row{display:flex;justify-content:space-between;align-items:center;padding:11px 0;border-bottom:1px solid #eee}.today .row{border:0;background:rgba(255,255,255,.06);border-radius:10px;padding:12px;margin:8px 0}.row b{font-size:14px}.btn{border:0;border-radius:10px;padding:12px 14px;font-weight:700}.today .btn{background:transparent;color:#fff;border:1px solid rgba(255,255,255,.35);padding:7px 11px}.primary{background:#1B1E24;color:#fff;width:100%;font-size:15px}.outline{background:#fff;border:1px solid var(--border)}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.stat{background:#F7F8FA;border-radius:10px;padding:12px}.stat strong{display:block;font-size:20px;margin-top:4px}.title{font-size:14px;font-weight:800;color:var(--soft);margin-bottom:10px}
+.progress{height:8px;background:#EBEDF1;border-radius:99px;overflow:hidden}.fill{height:100%;background:var(--num)}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.45);display:flex;align-items:flex-end;z-index:20}.sheet{max-width:480px;width:100%;margin:auto;background:var(--bg);border-radius:20px 20px 0 0;padding:20px;max-height:88vh;overflow:auto}.field{margin:12px 0}.field label{display:block;font-size:13px;font-weight:700;color:var(--soft);margin-bottom:7px}.field input,.field select,.field textarea{width:100%;padding:12px;border:1px solid var(--border);border-radius:10px;background:#fff;font-size:15px}.actions{display:flex;gap:8px}.actions .btn{flex:1}.empty{text-align:center;color:#9CA3AF;padding:30px}
+
+.capture-note{font-size:12px;line-height:1.55;color:var(--soft);background:#F7F8FA;padding:12px;border-radius:10px;margin-bottom:12px}
+.capture-box{border:1.5px dashed var(--border);border-radius:12px;padding:18px;text-align:center;background:#fff}
+.capture-preview{display:block;max-width:100%;max-height:280px;object-fit:contain;margin:12px auto 0;border-radius:10px}
+.copy-ok{font-size:12px;color:var(--green);margin-top:8px}
+
+.cal-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.cal-head button{border:1px solid var(--border);background:#fff;border-radius:9px;padding:7px 11px;font-weight:800}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:5px}
+.cal-week{font-size:11px;text-align:center;color:var(--soft);padding:5px 0}
+.cal-day{min-height:48px;border:1px solid var(--border);background:#fff;border-radius:9px;padding:5px;position:relative;font-size:12px;text-align:left}
+.cal-day.blank{visibility:hidden}.cal-day.todaycal{box-shadow:inset 0 0 0 2px var(--num)}
+.cal-dots{display:flex;gap:3px;position:absolute;left:5px;bottom:6px}
+.cal-dot{width:8px;height:8px;border-radius:50%}.cal-dot.hana{background:var(--hana)}.cal-dot.hyung{background:var(--hyung)}
+.legend{display:flex;gap:14px;font-size:12px;color:var(--soft);margin:8px 0 14px}.legend i{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:5px}
+.day-detail{margin-top:12px;border-top:1px solid var(--border);padding-top:12px}.person-detail{border-left:4px solid var(--border);padding:9px 10px;margin:8px 0;background:#F7F8FA;border-radius:8px}.person-detail.hana{border-left-color:var(--hana)}.person-detail.hyung{border-left-color:var(--hyung)}
+
+/* v8: cleaner study dashboard */
+.today .row{align-items:center;padding:14px 0;border-bottom:1px solid var(--line)}
+.today .row:last-child{border-bottom:0}
+.study-kind{width:68px;flex:0 0 68px;font-size:12px;color:var(--muted);font-weight:700}
+.study-main{flex:1;min-width:0;font-size:14px;font-weight:800}
+.study-main .sub{margin-top:3px;font-weight:500}
+.mini-action{flex:0 0 auto;margin-left:8px}
+.summary-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.summary-box{padding:14px;border:1px solid var(--line);border-radius:14px;background:var(--card2,rgba(255,255,255,.025))}
+.summary-box .num{font-size:22px;font-weight:900;margin-top:5px}
+.daily-section{margin-top:12px;padding:12px;border:1px solid var(--line);border-radius:14px}
+.daily-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:9px;font-weight:800}
+.daily-tag{font-size:11px;color:var(--muted);font-weight:700}
+.daily-item{padding:10px 0;border-top:1px solid var(--line)}
+.daily-item:first-of-type{border-top:0}
+.daily-actions{margin-top:7px;display:flex;gap:6px}
+
+/* v9: today's study alignment */
+.today{overflow:hidden}
+.today>.date{margin-bottom:4px}
+.today>b{display:block;margin-bottom:10px}
+.today .row{
+  display:grid !important;
+  grid-template-columns:72px minmax(0,1fr) 72px;
+  gap:10px;
+  align-items:center !important;
+  min-height:58px;
+  padding:11px 0 !important;
+}
+.today .study-kind{
+  width:auto !important;
+  min-width:0;
+  font-size:12px;
+  line-height:1.3;
+  white-space:nowrap;
+}
+.today .study-main{
+  min-width:0;
+  line-height:1.45;
+  overflow-wrap:anywhere;
+}
+.today .mini-action{
+  width:72px;
+  min-width:72px;
+  height:34px;
+  margin:0 !important;
+  padding:0 7px !important;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  border-radius:9px;
+  white-space:nowrap;
+}
+.today .study-main .btn{
+  min-height:27px;
+  padding:3px 8px !important;
+  margin-left:5px !important;
+  vertical-align:middle;
+}
+@media(max-width:390px){
+ .today .row{grid-template-columns:62px minmax(0,1fr) 66px;gap:7px}
+ .today .mini-action{width:66px;min-width:66px;font-size:11px}
+ .today .study-kind{font-size:11px}
+ .today .study-main{font-size:13px}
+}
+
+/* v10: compact card rows + visible saved values */
+.today .row{
+  background:rgba(255,255,255,.045);
+  border:1px solid rgba(255,255,255,.035) !important;
+  border-radius:11px;
+  padding:10px 9px !important;
+  margin:7px 0;
+  min-height:54px;
+  grid-template-columns:72px minmax(0,1fr) 72px !important;
+}
+.today .study-kind{color:#f3f6fb !important;font-weight:850 !important}
+.today .study-main{color:#ffffff !important;font-weight:800 !important}
+.today .study-main .record-detail{color:#f4f7fb !important;font-weight:750}
+.today .study-main .empty-detail{color:#aeb7c5 !important;font-weight:500}
+.today .record-actions{display:inline-flex;gap:4px;margin-left:6px;vertical-align:middle}
+.today .record-actions .btn{margin:0 !important;padding:3px 7px !important;font-size:11px;min-height:26px}
+.today .record-actions .delete-btn{opacity:.82}
+
+/* v11: dedicated wrong-note manager */
+.wrong-manager{margin-top:12px}
+.wrong-manager-head{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:12px}
+.wrong-manager-count{font-size:12px;color:var(--muted)}
+.wrong-note{border:1px solid var(--line);border-radius:14px;padding:13px;margin-bottom:9px}
+.wrong-note-top{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}
+.wrong-note-title{font-weight:850}
+.wrong-note-meta{font-size:12px;color:var(--muted);margin-top:4px;line-height:1.5}
+.wrong-note-actions{display:flex;gap:6px;margin-top:10px}
+.wrong-filter{display:flex;gap:7px;overflow-x:auto;margin-bottom:12px;padding-bottom:2px}
+.wrong-filter .btn{white-space:nowrap}
+
+/* v12: cumulative wrong-answer quiz */
+.quiz-card{border:1px solid var(--line);border-radius:14px;padding:14px;margin:10px 0}
+.quiz-progress{font-size:12px;color:var(--muted);margin-bottom:8px}
+.quiz-q{font-size:20px;font-weight:900;margin-bottom:8px}
+.quiz-meta{font-size:12px;color:var(--muted);line-height:1.6}
+.quiz-dots{letter-spacing:3px;font-size:15px;margin-top:8px}
+.status-pill{display:inline-block;border-radius:999px;padding:3px 8px;font-size:11px;font-weight:800;margin-left:5px}
+.status-repeat{background:#fff0ee;color:#c84f42}
+.status-done{background:#e8f6ef;color:#27835e}
+.status-progress{background:#eef0f4;color:#667085}
+.quiz-actions{display:flex;gap:8px;margin-top:12px}
+.quiz-actions .btn{flex:1}
+</style>
+</head>
+<body><div id="app"></div>
+<script>
+(()=>{
+const KEY='cal1_couple_app_v1';
+const names={hana:'유하나',hyung:'박형용'};
+const subjects=['전체','컴퓨터 일반','스프레드시트 일반','데이터베이스 일반'];
+let state=JSON.parse(localStorage.getItem(KEY)||'null')||{settings:{hana:{examDate:'',weeklyGoal:4},hyung:{examDate:'',weeklyGoal:4}},readings:[],exams:[],wrongs:[],minutes:[]};
+state.messages=Array.isArray(state.messages)?state.messages:[];
+state.wrongs=Array.isArray(state.wrongs)?state.wrongs:[];
+state.wrongs=state.wrongs.map(x=>Object.assign({questionText:'',choices:['','','',''],answer:'',quizCorrect:0,quizWrong:0,repeatWrong:false},x));
+let tab='hana', modal=null;
+let calCursor=new Date(); let selectedCalDate=null;
+const save=()=>localStorage.setItem(KEY,JSON.stringify(state));
+const pad=n=>String(n).padStart(2,'0');
+const today=()=>{let d=new Date();return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`};
+selectedCalDate=today();
+const fmt=m=>m<60?m+'분':Math.floor(m/60)+'시간'+(m%60?' '+m%60+'분':'');
+const mins=(u,d=today())=>(state.minutes.find(x=>x.u===u&&x.d===d)||{}).m||0;
+const readings=u=>state.readings.filter(x=>x.u===u);
+const exams=u=>state.exams.filter(x=>x.u===u);
+const wrongs=u=>state.wrongs.filter(x=>x.u===u);
+const studyDates=u=>new Set([...readings(u).map(x=>x.d),...exams(u).map(x=>x.d),...wrongs(u).map(x=>x.d),...state.minutes.filter(x=>x.u===u&&x.m>0).map(x=>x.d)]);
+function dday(u){let s=state.settings[u].examDate;if(!s)return '시험일 미설정';let a=new Date(today()),b=new Date(s),n=Math.round((b-a)/864e5);return n>0?'D-'+n:n===0?'D-Day':'D+'+Math.abs(n)}
+function week(u){let now=new Date(),day=now.getDay()||7,mon=new Date(now);mon.setDate(now.getDate()-day+1);let ds=[];for(let i=0;i<7;i++){let d=new Date(mon);d.setDate(mon.getDate()+i);ds.push(`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`)}let set=studyDates(u),done=ds.filter(d=>set.has(d)).length,goal=state.settings[u].weeklyGoal||4,mm=ds.reduce((s,d)=>s+mins(u,d),0);return{done,goal,pct:Math.round(done/goal*100),mm}}
+function home(u){
+ let w=week(u),r=readings(u),e=exams(u),wr=wrongs(u),rt=r.reduce((s,x)=>s+x.count,0),latest=e[e.length-1],rate=latest?Math.round(latest.correct/latest.total*1000)/10:'-';
+ let todayR=state.readings.map((x,i)=>({...x,_i:i})).filter(x=>x.u===u&&x.d===today());
+ let todayE=state.exams.map((x,i)=>({...x,_i:i})).filter(x=>x.u===u&&x.d===today());
+ let todayW=state.wrongs.map((x,i)=>({...x,_i:i})).filter(x=>x.u===u&&x.d===today());
+ let mx=state.minutes.findIndex(x=>x.u===u&&x.d===today()), tm=mx>=0?state.minutes[mx]:null;
+ let inline=(html)=>html||'<span class="sub">아직 기록 없음</span>';
+ return `<div class="top"><div class="meta">컴활 1급 · 필기</div><h1>${names[u]} <span style="float:right;font-size:13px">${dday(u)}</span></h1></div><div class="content">
+ <div class="card today"><div class="date">${today()}</div><b>오늘의 공부</b>
+ <div class="row"><span class="study-kind">필기 회독</span><span class="study-main">${todayR.length?todayR.map(x=>`<span class="record-detail">${x.count}회독</span><span class="record-actions"><button class="btn outline" onclick="editRecord('reading',${x._i})">수정</button><button class="btn outline delete-btn" data-delete-type="reading" data-delete-index="${x._i}">삭제</button></span>`).join('<br>'):'<span class="empty-detail">아직 기록 없음</span>'}</span><button class="btn mini-action" onclick="openM('reading')">+ 기록</button></div>
+ <div class="row"><span class="study-kind">기출</span><span class="study-main">${todayE.length?todayE.map(x=>{let wc=x.wrongCount??(x.total-x.correct),pct=x.total?((x.correct/x.total)*100).toFixed(1):0;return `<span class="record-detail">${x.year}년 ${x.round}회 · ${x.correct}/${x.total} · ${pct}%</span><span class="record-actions"><button class="btn outline" onclick="editRecord('exam',${x._i})">수정</button><button class="btn outline delete-btn" data-delete-type="exam" data-delete-index="${x._i}">삭제</button></span>`}).join('<br>'):'<span class="empty-detail">아직 기록 없음</span>'}</span><button class="btn mini-action" onclick="openM('exam')">+ 기록</button></div>
+ <div class="row"><span class="study-kind">오답</span><span class="study-main">${todayW.length?todayW.map(x=>`<span class="record-detail">${escapeHtml(x.question||'문제')}번${x.subject?' · '+escapeHtml(x.subject):''}</span><span class="record-actions"><button class="btn outline" onclick="editRecord('wrong',${x._i})">수정</button><button class="btn outline delete-btn" data-delete-type="wrong" data-delete-index="${x._i}">삭제</button></span>`).join('<br>'):'<span class="empty-detail">아직 기록 없음</span>'}</span><button class="btn mini-action" onclick="openM('wrong')">+ 등록</button></div>
+ <div class="row"><span class="study-kind">공부시간</span><span class="study-main">${tm?`<span class="record-detail">${fmt(tm.m)}</span><span class="record-actions"><button class="btn outline" onclick="editRecord('minutes',${mx})">수정</button><button class="btn outline delete-btn" data-delete-type="minutes" data-delete-index="${mx}">삭제</button></span>`:'<span class="empty-detail">선택 입력</span>'}</span><button class="btn mini-action" onclick="openM('minutes')">${tm?'변경':'+ 기록'}</button></div>
+ </div>
+ <div class="card"><div class="title">누적 현황</div>
+ <div class="summary-grid">
+  <div class="summary-box"><div class="sub">필기 회독</div><div class="num">${rt}회</div></div>
+  <div class="summary-box"><div class="sub">기출 풀이</div><div class="num">${e.length}회</div></div>
+  <div class="summary-box"><div class="sub">오답 등록</div><div class="num">${wr.length}개</div></div>
+  <div class="summary-box"><div class="sub">최근 정답률</div><div class="num">${rate}${rate==='-'?'':'%'}</div></div>
+ </div></div>
+ ${wrongManagerHtml(u)}
+ ${personalDailyHtml(u)}
+ </div>`;
+}
+
+function wrongManagerHtml(u){
+ let list=state.wrongs.map((x,i)=>({...x,_i:i})).filter(x=>x.u===u).sort((a,b)=>(b.d||'').localeCompare(a.d||''));
+ let active=list.filter(x=>(x.quizCorrect||0)<5), eligible=active.filter(x=>(x.d||'')<today()), repeat=list.filter(x=>x.repeatWrong), done=list.filter(x=>(x.quizCorrect||0)>=5);
+ return `<div class="card wrong-manager">
+ <div class="wrong-manager-head"><div><div class="title" style="margin:0">오답노트 관리</div><div class="wrong-manager-count">전체 ${list.length} · 진행중 ${active.length} · 반복오답 ${repeat.length} · 해결완료 ${done.length}</div></div><button class="btn" onclick="openM('wrong')">+ 오답 등록</button></div>
+ ${eligible.length?`<button class="btn primary" style="width:100%;margin-bottom:12px" onclick="startWrongQuiz('${u}')">오답 퀴즈 시작 · ${eligible.length}문제</button>`:(active.length?`<div class="capture-note" style="margin-bottom:12px">오늘 등록한 오답은 내일부터 퀴즈에 나와요.</div>`:'')}
+ <div class="wrong-filter"><button class="btn outline" onclick="setWrongFilter('all')">전체</button><button class="btn outline" onclick="setWrongFilter('active')">진행중</button><button class="btn outline" onclick="setWrongFilter('repeat')">반복오답</button><button class="btn outline" onclick="setWrongFilter('done')">해결완료</button></div>
+ <div id="wrongList">${wrongListHtml(list)}</div>
+ </div>`;
+}
+window.wrongFilter='all';
+function wrongListHtml(list){
+ let f=window.wrongFilter||'all';
+ let shown=list.filter(x=>f==='all'||(f==='active'&&(x.quizCorrect||0)<5)||(f==='repeat'&&x.repeatWrong)||(f==='done'&&(x.quizCorrect||0)>=5));
+ return shown.length?shown.map(x=>{
+   let qc=Math.min(5,x.quizCorrect||0), done=qc>=5;
+   return `<div class="wrong-note"><div class="wrong-note-top"><div><div class="wrong-note-title">${escapeHtml(x.question||'문제')}번
+   ${done?'<span class="status-pill status-done">해결완료</span>':x.repeatWrong?'<span class="status-pill status-repeat">반복오답</span>':'<span class="status-pill status-progress">진행중</span>'}</div>
+   <div class="wrong-note-meta">${x.d||''}${x.year?' · '+x.year+'년':''}${x.round?' '+x.round+'회':''}<br>${x.questionText?escapeHtml(x.questionText):'문제내용 미입력'}<br>퀴즈 정답 ${qc}/5</div>
+   <div class="quiz-dots">${'●'.repeat(qc)}${'○'.repeat(5-qc)}</div></div></div>
+   <div class="wrong-note-actions"><button class="btn outline" onclick="editRecord('wrong',${x._i})">수정</button><button class="btn outline delete-btn" data-delete-type="wrong" data-delete-index="${x._i}">삭제</button></div></div>`;
+ }).join(''):'<div class="empty">해당하는 오답이 없어요.</div>';
+}
+window.setWrongFilter=function(f){window.wrongFilter=f;render();}
+
+window.startWrongQuiz=function(u){
+ let ids=state.wrongs.map((x,i)=>({...x,_i:i})).filter(x=>x.u===u&&(x.quizCorrect||0)<5&&(x.d||'')<today()).map(x=>x._i);
+ if(!ids.length){alert('오늘 풀 수 있는 오답 퀴즈가 없어요. 오늘 등록한 오답은 내일부터 출제돼요.');return;}
+ window.quizState={u:u,ids:ids,pos:0,answered:false};
+ showWrongQuiz();
+}
+window.showWrongQuiz=function(){
+ let q=window.quizState;
+ if(!q)return;
+ if(q.pos>=q.ids.length){
+   modal=`<div class="modal"><div class="sheet"><h3>오늘의 오답 퀴즈 완료</h3><div class="capture-note">5회 정답 전까지 다음 퀴즈에도 계속 누적됩니다. 5/5가 된 문제는 오답노트의 해결완료에서 계속 볼 수 있어요.</div><button class="btn primary" style="width:100%;margin-top:14px" onclick="closeM()">완료</button></div></div>`;render();return;
+ }
+ let idx=q.ids[q.pos],x=state.wrongs[idx]; if(!x){q.pos++;showWrongQuiz();return;}
+ let qc=Math.min(5,x.quizCorrect||0), choices=Array.isArray(x.choices)?x.choices:['','','',''];
+ let hasFull=x.questionText&&choices.filter(Boolean).length===4&&String(x.answer||'').match(/^[1-4]$/);
+ let opts=hasFull?choices.map((c,i)=>`<button class="option quiz-choice" data-quiz-choice="${i+1}" onclick="answerChoice(${i+1})">${['①','②','③','④'][i]} ${escapeHtml(c)}</button>`).join(''):`<div class="capture-note">이 오답은 예전 형식으로 등록되어 문제내용/보기/정답이 없어요. 수정에서 내용을 채우면 객관식 퀴즈로 풀 수 있어요.</div><div class="quiz-actions"><button class="btn outline" onclick="answerWrongQuiz(false)">또 틀림</button><button class="btn primary" onclick="answerWrongQuiz(true)">이번엔 맞음</button></div>`;
+ modal=`<div class="modal"><div class="sheet"><h3>오답 퀴즈</h3>
+ <div class="quiz-card"><div class="quiz-progress">${q.pos+1} / ${q.ids.length} 문제</div><div class="quiz-meta">${x.year?x.year+'년 ':''}${x.round?x.round+'회 · ':''}${escapeHtml(x.question||'문제')}번</div>
+ <div class="quiz-q">${escapeHtml(x.questionText||('문제 '+(x.question||'')) )}</div>
+ <div class="quiz-meta">정답 누적 <span class="quiz-dots">${'●'.repeat(qc)}${'○'.repeat(5-qc)}</span> <b>${qc}/5</b></div></div>
+ <div id="quizOptions">${opts}</div><div id="quizFeedback"></div>
+ <button id="quizNext" class="btn primary" style="display:none;width:100%;margin-top:12px" onclick="nextWrongQuiz()">다음 문제 →</button>
+ <button class="btn outline" style="width:100%;margin-top:8px" onclick="closeM()">나중에 하기</button></div></div>`;
+ render();
+}
+window.answerChoice=function(choice){
+ let q=window.quizState;if(!q||q.answered)return;let idx=q.ids[q.pos],x=state.wrongs[idx];if(!x)return;
+ q.answered=true;let correct=Number(x.answer)===Number(choice);
+ if(correct)x.quizCorrect=Math.min(5,(x.quizCorrect||0)+1);else{x.repeatWrong=true;x.quizWrong=(x.quizWrong||0)+1}
+ save();
+ document.querySelectorAll('[data-quiz-choice]').forEach(btn=>{
+   let n=Number(btn.dataset.quizChoice);btn.disabled=true;
+   if(n===Number(x.answer))btn.style.cssText+=';border-color:#65b18f;background:#edf8f2';
+   else if(n===Number(choice)&&!correct)btn.style.cssText+=';border-color:#e19a93;background:#fff1ef';
+ });
+ let fb=document.getElementById('quizFeedback'),qc=Math.min(5,x.quizCorrect||0);
+ if(fb)fb.innerHTML=`<div class="capture-note" style="margin-top:12px"><b>${correct?'정답이에요.':'또 틀렸어요.'}</b><br>${correct?(qc>=5?'정답 누적 5/5 · 해결완료!':'정답 누적 '+qc+'/5로 올라갔어요.'):'반복오답으로 표시되고 정답 누적은 그대로예요.'}</div>`;
+ let nb=document.getElementById('quizNext');if(nb)nb.style.display='block';
+}
+window.nextWrongQuiz=function(){let q=window.quizState;if(!q)return;q.pos++;q.answered=false;showWrongQuiz()}
+window.answerWrongQuiz=function(correct){
+ let q=window.quizState,idx=q.ids[q.pos],x=state.wrongs[idx];if(!x)return;
+ if(correct)x.quizCorrect=Math.min(5,(x.quizCorrect||0)+1);else{x.repeatWrong=true;x.quizWrong=(x.quizWrong||0)+1}
+ save();q.pos++;showWrongQuiz();
+}
+function personalDailyHtml(u){
+ let dates=[...studyDates(u)].sort().reverse(), d=selectedPersonalDate&&dates.includes(selectedPersonalDate)?selectedPersonalDate:(dates[0]||today());
+ let items=personalDayItems(u,d);
+ return `<div class="card"><div class="title">일자별 학습기록</div>
+ <div class="capture-note">오늘 등록한 내용도 저장 즉시 여기에서 확인할 수 있어요. 기록은 수정하거나 삭제할 수 있습니다.</div>
+ <div class="field"><label>날짜 선택</label><select onchange="selectPersonalDate(this.value)">${dates.length?dates.map(x=>`<option value="${x}" ${x===d?'selected':''}>${x}</option>`).join(''):`<option value="${today()}">${today()}</option>`}</select></div>
+ <div>${items.length?items.join(''):'<div class="empty">이 날짜에는 아직 학습 기록이 없어요.</div>'}</div></div>`;
+}
+let selectedPersonalDate=null;
+function personalDayItems(u,d){
+ let groups={reading:[],exam:[],wrong:[],minutes:[]};
+ state.readings.forEach((x,i)=>{if(x.u===u&&x.d===d)groups.reading.push(`<div class="daily-item"><b>${x.count}회독</b><div class="daily-actions"><button class="btn outline" onclick="editRecord('reading',${i})">수정</button><button class="btn outline" data-delete-type="reading" data-delete-index="${i}">삭제</button></div></div>`)});
+ state.exams.forEach((x,i)=>{if(x.u===u&&x.d===d){let wc=x.wrongCount??(x.total-x.correct),pct=x.total?((x.correct/x.total)*100).toFixed(1):0;groups.exam.push(`<div class="daily-item"><b>${x.year}년 ${x.round}회</b><div class="sub">${x.total}문제 · 오답 ${wc}개 · 정답률 ${pct}%</div><div class="daily-actions"><button class="btn outline" onclick="editRecord('exam',${i})">수정</button><button class="btn outline" data-delete-type="exam" data-delete-index="${i}">삭제</button></div></div>`)}}); 
+ state.wrongs.forEach((x,i)=>{if(x.u===u&&x.d===d)groups.wrong.push(`<div class="daily-item"><b>${escapeHtml(x.question||'문제')}번</b><div class="sub">${escapeHtml(x.questionText||'문제내용 미입력')}</div><div class="daily-actions"><button class="btn outline" onclick="editRecord('wrong',${i})">수정</button><button class="btn outline" data-delete-type="wrong" data-delete-index="${i}">삭제</button></div></div>`)});
+ state.minutes.forEach((x,i)=>{if(x.u===u&&x.d===d&&x.m>0)groups.minutes.push(`<div class="daily-item"><b>${fmt(x.m)}</b><div class="daily-actions"><button class="btn outline" onclick="editRecord('minutes',${i})">수정</button><button class="btn outline" data-delete-type="minutes" data-delete-index="${i}">삭제</button></div></div>`)});
+ let section=(title,tag,arr)=>arr.length?`<div class="daily-section"><div class="daily-head"><span>${title}</span><span class="daily-tag">${tag}</span></div>${arr.join('')}</div>`:'';
+ let html=section('필기 요약본','회독',groups.reading)+section('기출문제','기출',groups.exam)+section('오답노트','복습',groups.wrong)+section('공부시간','선택',groups.minutes);
+ return html?[html]:[];
+}
+window.selectPersonalDate=d=>{selectedPersonalDate=d;render()}
+window.askDeleteRecord=(type,i)=>{
+ const map={reading:'readings',exam:'exams',wrong:'wrongs',minutes:'minutes'};
+ const key=map[type], idx=Number(i);
+ if(!key || !Array.isArray(state[key]) || !Number.isInteger(idx) || idx<0 || idx>=state[key].length) return;
+ modal=`<div class="modal"><div class="sheet"><h3>기록 삭제</h3>
+ <div class="capture-note">등록한 이 학습 기록을 완전히 삭제할까요?</div>
+ <button class="btn primary" style="width:100%;margin-top:14px" id="confirmDeleteBtn" data-confirm-delete-type="${type}" data-confirm-delete-index="${idx}">삭제하기</button>
+ <button class="btn outline" style="width:100%;margin-top:8px" onclick="closeM()">취소</button></div></div>`;
+ render();
+}
+window.performDeleteRecord=(type,i)=>{
+ const map={reading:'readings',exam:'exams',wrong:'wrongs',minutes:'minutes'};
+ const key=map[type], idx=Number(i);
+ if(!key || !Array.isArray(state[key]) || !Number.isInteger(idx) || idx<0 || idx>=state[key].length) return;
+ state[key].splice(idx,1);
+ modal=null;
+ save();
+ render();
+}
+window.editRecord=(type,i)=>{
+ let x,body='';
+ if(type==='reading'){x=state.readings[i];body=`<h3>회독 기록 수정</h3><div class="field"><label>날짜</label><input id="ed" type="date" value="${x.d}"></div><div class="field"><label>회독 횟수</label><input id="ecount" type="number" min="1" value="${x.count}"></div>`}
+ if(type==='exam'){x=state.exams[i];body=`<h3>기출 기록 수정</h3><div class="field"><label>날짜</label><input id="ed" type="date" value="${x.d}"></div><div class="field"><label>연도</label><input id="eyear" type="number" value="${x.year}"></div><div class="field"><label>회차</label><input id="eround" type="number" value="${x.round}"></div><div class="field"><label>총 문제 수</label><input id="etotal" type="number" value="${x.total}"></div><div class="field"><label>오답 개수</label><input id="ewrong" type="number" min="0" value="${x.wrongCount??(x.total-x.correct)}"></div>`}
+ if(type==='wrong'){x=state.wrongs[i];let ch=Array.isArray(x.choices)?x.choices:['','','',''];body=`<h3>오답 기록 수정</h3><div class="field"><label>날짜</label><input id="ed" type="date" value="${x.d}"></div><div class="field"><label>문제번호</label><input id="eq" value="${escapeHtml(x.question||'')}"></div><div class="field"><label>문제내용</label><textarea id="eqtext">${escapeHtml(x.questionText||'')}</textarea></div>${ch.map((v,j)=>`<div class="field"><label>보기 ${j+1}</label><input id="echoice${j+1}" value="${escapeHtml(v)}"></div>`).join('')}<div class="field"><label>정답</label><select id="eanswer">${[1,2,3,4].map(n=>`<option value="${n}" ${String(x.answer)===String(n)?'selected':''}>${n}번</option>`).join('')}</select></div>`}
+ if(type==='minutes'){x=state.minutes[i];body=`<h3>공부시간 수정 <span class="sub">(선택)</span></h3><div class="field"><label>날짜</label><input id="ed" type="date" value="${x.d}"></div><div class="field"><label>공부한 시간(분)</label><input id="emm" type="number" min="0" value="${x.m}"></div>`}
+ modal=`<div class="modal" onclick="if(event.target===this)closeM()"><div class="sheet">${body}<button class="btn primary" onclick="saveEdit('${type}',${i})">수정 저장</button><button class="btn outline" style="width:100%;margin-top:8px" onclick="closeM()">취소</button></div></div>`;render()
+}
+window.saveEdit=(type,i)=>{
+ if(type==='reading'){let x=state.readings[i];x.d=document.getElementById('ed').value;x.count=Math.max(1,+document.getElementById('ecount').value||1)}
+ if(type==='exam'){let x=state.exams[i],total=Math.max(1,+document.getElementById('etotal').value||1),wc=Math.max(0,+document.getElementById('ewrong').value||0);wc=Math.min(total,wc);x.d=document.getElementById('ed').value;x.year=+document.getElementById('eyear').value;x.round=+document.getElementById('eround').value;x.total=total;x.wrongCount=wc;x.correct=total-wc}
+ if(type==='wrong'){let x=state.wrongs[i];x.d=document.getElementById('ed').value;x.question=document.getElementById('eq').value;x.questionText=document.getElementById('eqtext').value;x.choices=[1,2,3,4].map(n=>document.getElementById('echoice'+n).value);x.answer=document.getElementById('eanswer').value}
+ if(type==='minutes'){let x=state.minutes[i];x.d=document.getElementById('ed').value;x.m=Math.max(0,+document.getElementById('emm').value||0)}
+ save();closeM()
+}
+function hasStudy(u,d){return readings(u).some(x=>x.d===d)||exams(u).some(x=>x.d===d)||wrongs(u).some(x=>x.d===d)||mins(u,d)>0}
+function daySummary(u,d){
+ let rr=readings(u).filter(x=>x.d===d).reduce((a,x)=>a+x.count,0);
+ let ee=exams(u).filter(x=>x.d===d);
+ let ww=wrongs(u).filter(x=>x.d===d);
+ let parts=[];
+ if(rr)parts.push(`요약본 ${rr}회독`);
+ ee.forEach(x=>parts.push(`기출 ${x.year}년 ${x.round}회 · ${x.total}문제 / 오답 ${x.wrongCount??(x.total-x.correct)}개 · ${x.total?((x.correct/x.total)*100).toFixed(1):0}%`));
+ if(ww.length)parts.push(`오답노트 ${ww.length}개`);
+ let mm=mins(u,d);if(mm)parts.push(`공부시간 ${fmt(mm)}`);
+ return parts;
+}
+function calendarHtml(){
+ let y=calCursor.getFullYear(),m=calCursor.getMonth(),first=new Date(y,m,1),last=new Date(y,m+1,0);
+ let blanks=first.getDay(),cells='',weeks=['일','월','화','수','목','금','토'];
+ for(let i=0;i<blanks;i++)cells+='<div class="cal-day blank"></div>';
+ for(let day=1;day<=last.getDate();day++){
+   let d=`${y}-${pad(m+1)}-${pad(day)}`,h=hasStudy('hana',d),f=hasStudy('hyung',d);
+   cells+=`<button class="cal-day ${d===today()?'todaycal':''}" onclick="selectCal('${d}')"><b>${day}</b><span class="cal-dots">${h?'<i class="cal-dot hana"></i>':''}${f?'<i class="cal-dot hyung"></i>':''}</span></button>`;
+ }
+ let detail='';
+ if(selectedCalDate && selectedCalDate.startsWith(`${y}-${pad(m+1)}`)){
+   let hs=daySummary('hana',selectedCalDate),fs=daySummary('hyung',selectedCalDate);
+   detail=`<div class="day-detail"><b>${selectedCalDate} 공부 기록</b>
+   <div class="person-detail hana"><b>유하나</b><div class="sub" style="margin-top:5px">${hs.length?hs.join('<br>'):'공부 기록 없음'}</div></div>
+   <div class="person-detail hyung"><b>박형용</b><div class="sub" style="margin-top:5px">${fs.length?fs.join('<br>'):'공부 기록 없음'}</div></div></div>`;
+ }
+ return `<div class="card"><div class="title">우리 공부 캘린더</div><div class="legend"><span><i style="background:var(--hana)"></i>유하나</span><span><i style="background:var(--hyung)"></i>박형용</span></div>
+ <div class="cal-head"><button onclick="moveCal(-1)">‹</button><b>${y}년 ${m+1}월</b><button onclick="moveCal(1)">›</button></div>
+ <div class="cal-grid">${weeks.map(w=>`<div class="cal-week">${w}</div>`).join('')}${cells}</div>${detail}</div>`;
+}
+window.moveCal=n=>{calCursor=new Date(calCursor.getFullYear(),calCursor.getMonth()+n,1);selectedCalDate=`${calCursor.getFullYear()}-${pad(calCursor.getMonth()+1)}-01`;render()}
+window.selectCal=d=>{selectedCalDate=d;render()}
+function together(){
+ let a=week('hana'),b=week('hyung');
+ let msgs=state.messages.slice().reverse();
+ return `<div class="top"><div class="meta">컴활 1급</div><h1>우리의 합격 프로젝트</h1></div><div class="content">
+ ${calendarHtml()}
+ <div class="card"><div class="title">이번 주 함께 달린 기록</div><div class="row"><b>유하나</b><span>${a.done}/${a.goal}회 · ${fmt(a.mm)}</span></div><div class="row"><b>박형용</b><span>${b.done}/${b.goal}회 · ${fmt(b.mm)}</span></div></div>
+ <div class="card"><div class="title">누적 기록</div><div class="row"><b>유하나</b><span>요약본 ${readings('hana').reduce((s,x)=>s+x.count,0)}회독 · 기출 ${exams('hana').length} · 오답 ${wrongs('hana').length}</span></div><div class="row"><b>박형용</b><span>요약본 ${readings('hyung').reduce((s,x)=>s+x.count,0)}회독 · 기출 ${exams('hyung').length} · 오답 ${wrongs('hyung').length}</span></div></div>
+ <div class="card"><div class="title">서로 힘내라고 한마디</div>
+ <div class="field"><label>작성자</label><select id="msgAuthor"><option value="hana">유하나</option><option value="hyung">박형용</option></select></div>
+ <div class="field"><label>메시지</label><textarea id="msgText" placeholder="오늘도 같이 힘내자!"></textarea></div>
+ <button class="btn primary" onclick="saveMessage()">메시지 남기기</button>
+ <div style="margin-top:14px">${msgs.length?msgs.map(m=>`<div class="stat" style="margin-bottom:8px"><b>${names[m.u]}</b><span class="sub" style="float:right">${m.d}</span><div style="margin-top:7px;white-space:pre-wrap">${escapeHtml(m.text)}</div></div>`).join(''):'<div class="empty">아직 남긴 메시지가 없어요.</div>'}</div>
+ </div></div>`;
+}
+function escapeHtml(x){return String(x||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+window.saveMessage=()=>{let u=document.getElementById('msgAuthor').value,text=document.getElementById('msgText').value.trim();if(!text){alert('메시지를 입력해 주세요.');return}state.messages.push({u,d:today(),text,createdAt:Date.now()});save();render()}
+function render(){document.getElementById('app').innerHTML=(tab==='together'?together():home(tab))+`<div class="tabs"><button class="${tab==='hana'?'on':''}" onclick="go('hana')">유하나</button><button class="${tab==='together'?'on':''}" onclick="go('together')">같이보기</button><button class="${tab==='hyung'?'on':''}" onclick="go('hyung')">박형용</button></div>`+(modal||'')}
+window.go=t=>{tab=t;modal=null;render()}
+window.openM=t=>{if(tab==='together')return;let body='';
+ if(t==='reading')body=`<h3>필기 요약본 회독</h3><div class="capture-note">20페이지 요약본을 오늘 몇 회독했는지만 기록해요.</div><div class="field"><label>오늘 회독 횟수</label><input id="count" type="number" min="1" value="1"></div><button class="btn primary" onclick="saveReading()">저장</button>`;
+ if(t==='exam')body=`<h3>기출 기록</h3><div class="field"><label>연도</label><input id="year" type="number" value="${new Date().getFullYear()-2}"></div><div class="field"><label>회차</label><input id="round" type="number" value="1"></div><div class="field"><label>총 문제 수</label><input id="total" type="number" value="60"></div><div class="field"><label>오답 개수</label><input id="wrongCount" type="number" min="0" value="0"></div><div class="capture-note">저장하면 정답 수와 정답률을 자동 계산하고, 오답이 있으면 바로 오답노트 등록 화면으로 넘어가요.</div><button class="btn primary" onclick="saveExam()">저장하고 다음</button>`;
+ if(t==='wrong')body=`<h3>오답 등록</h3><div class="capture-note">ChatGPT에서 추출한 문제내용·보기·정답을 그대로 입력하면 내일부터 객관식 오답 퀴즈에 나와요.</div><div class="field"><label>문제번호</label><input id="q" placeholder="예: 12"></div><div class="field"><label>문제내용</label><textarea id="qtext" placeholder="문제 내용을 붙여넣어 주세요."></textarea></div>${[1,2,3,4].map(n=>`<div class="field"><label>보기 ${n}</label><input id="choice${n}" placeholder="${n}번 보기"></div>`).join('')}<div class="field"><label>정답</label><select id="answer"><option value="1">1번</option><option value="2">2번</option><option value="3">3번</option><option value="4">4번</option></select></div><button class="btn primary" onclick="saveWrong()">오답 저장</button>`;
+ if(t==='minutes')body=`<h3>공부시간 기록 <span class="sub">(선택)</span></h3><div class="capture-note">공부시간은 입력하지 않아도 학습 기록을 저장할 수 있어요.</div><div class="field"><label>공부한 시간(분)</label><input id="mm" type="number" min="0" value="${mins(tab)}"></div><button class="btn primary" onclick="saveMinutes()">저장</button>`;
+ modal=`<div class="modal" onclick="if(event.target===this)closeM()"><div class="sheet">${body}<button class="btn outline" style="width:100%;margin-top:8px" onclick="closeM()">닫기</button></div></div>`;render()}
+window.closeM=()=>{modal=null;render()}
+window.saveReading=()=>{selectedPersonalDate=today();state.readings.push({u:tab,d:today(),subject:'필기 요약본',count:+document.getElementById('count').value||1});save();closeM()}
+window.saveExam=()=>{selectedPersonalDate=today();let total=+document.getElementById('total').value||60,wc=Math.max(0,+document.getElementById('wrongCount').value||0);wc=Math.min(total,wc);let correct=total-wc,year=+document.getElementById('year').value,round=+document.getElementById('round').value;state.exams.push({u:tab,d:today(),year,round,total,correct,wrongCount:wc});save();if(wc>0){openWrongAfterExam(year,round,wc)}else{closeM()}}
+window.saveWrong=()=>{
+ selectedPersonalDate=today();
+ let q=document.getElementById('q').value.trim(),qt=document.getElementById('qtext').value.trim(),choices=[1,2,3,4].map(n=>document.getElementById('choice'+n).value.trim()),answer=document.getElementById('answer').value;
+ if(!q||!qt||choices.some(x=>!x)){alert('문제번호, 문제내용, 보기 4개를 모두 입력해 주세요.');return}
+ state.wrongs.push({u:tab,d:today(),question:q,questionText:qt,choices,answer,quizCorrect:0,quizWrong:0,repeatWrong:false});
+ save();closeM()
+}
+window.saveMinutes=()=>{selectedPersonalDate=today();let x=state.minutes.find(x=>x.u===tab&&x.d===today()),m=Math.max(0,+document.getElementById('mm').value||0);x?x.m=m:state.minutes.push({u:tab,d:today(),m});save();closeM()}
+window.saveSettings=()=>{state.settings[tab].examDate=document.getElementById('examDate').value;state.settings[tab].weeklyGoal=Math.max(1,Math.min(7,+document.getElementById('goal').value||4));save();render()}
+
+
+window.openWrongAfterExam=(year,round,wc)=>{
+ modal=`<div class="modal" onclick="if(event.target===this)closeM()"><div class="sheet">
+ <h3>오답노트 등록</h3>
+ <div class="capture-note">${year}년 ${round}회 · 오답 ${wc}개가 기록됐어요.<br>바로 오답노트를 등록해 주세요.</div>
+ <button class="btn primary" onclick="openM('wrong')">직접 입력</button>
+ 
+ <button class="btn outline" style="width:100%;margin-top:8px" onclick="closeM()">나중에 등록</button>
+ </div></div>`;render()
+}
+
+window.openWeeklyGoal=()=>{
+ let current=state.settings[tab].weeklyGoal||4;
+ modal=`<div class="modal" onclick="if(event.target===this)closeM()"><div class="sheet">
+ <h3>이번 주 공부 목표</h3>
+ <div class="capture-note">이번 주 상황에 맞춰 목표 횟수를 바꿀 수 있어요. 유하나와 박형용은 각각 따로 설정됩니다.</div>
+ <div class="field"><label>이번 주 목표 횟수</label><input id="weeklyGoalInput" type="number" min="1" max="7" value="${current}"></div>
+ <button class="btn primary" onclick="saveWeeklyGoal()">이번 주 목표 저장</button>
+ <button class="btn outline" style="width:100%;margin-top:8px" onclick="closeM()">취소</button>
+ </div></div>`;render()
+}
+window.saveWeeklyGoal=()=>{
+ let v=Math.max(1,Math.min(7,+document.getElementById('weeklyGoalInput').value||1));
+ state.settings[tab].weeklyGoal=v;save();closeM()
+}
+window.openCapture=()=>{
+ modal=`<div class="modal" onclick="if(event.target===this)closeM()"><div class="sheet">
+ <h3></h3>
+ <div class="capture-note"><b>사용 방법</b><br>① 아래에서 오답 캡처 선택 → ② 분석 요청문 복사 → ③ ChatGPT에 캡처와 요청문을 같이 보내기 → ④ 받은 결과를 아래 칸에 붙여넣기 → ⑤ 자동 등록</div>
+ <div class="capture-box"><label class="btn outline" for="capFile">이미지 선택</label><input id="capFile" type="file" accept="image/*" style="display:none" onchange="previewCapture(this)"><img id="capPreview" class="capture-preview" style="display:none"></div>
+ <button class="btn outline" style="width:100%;margin-top:10px" onclick="copyCapturePrompt()">ChatGPT 분석 요청문 복사</button>
+ <div id="copyMsg" class="copy-ok"></div>
+ <div class="field"><label>ChatGPT 분석 결과 붙여넣기</label><textarea id="analysis" rows="9" placeholder="문제번호: 12&#10;과목: 컴퓨터 일반&#10;틀린 이유: 개념 모름&#10;핵심 개념: ...&#10;메모: ..."></textarea></div>
+ <button class="btn primary" onclick="importAnalysis()">분석 결과 자동 등록</button>
+ <button class="btn outline" style="width:100%;margin-top:8px" onclick="closeM()">닫기</button>
+ </div></div>`;render()
+}
+window.previewCapture=input=>{
+ let f=input.files&&input.files[0]; if(!f)return;
+ let r=new FileReader(); r.onload=e=>{let img=document.getElementById('capPreview');if(img){img.src=e.target.result;img.style.display='block'}};r.readAsDataURL(f)
+}
+window.copyCapturePrompt=async()=>{
+ let prompt=`이 컴퓨터활용능력 1급 필기 CBT 오답 캡처 이미지를 분석해줘.
+이미지에 보이는 오답 문제마다 아래 형식을 정확히 반복해서 출력해줘.
+
+문제번호: 숫자
+과목: 컴퓨터 일반 / 스프레드시트 일반 / 데이터베이스 일반 중 하나
+틀린 이유: 개념 모름 / 헷갈림 / 암기 부족 / 문제 잘못 읽음 / 단순 실수 중 하나
+핵심 개념: 시험 복습에 필요한 내용을 한 줄로
+메모: 다시 풀 때 기억해야 할 핵심
+
+문제가 여러 개면 문제 사이를 빈 줄 하나로 구분해줘.
+이미지에서 확실하지 않은 내용은 추측하지 말고 "확인 필요"라고 적어줘.
+설명이나 머리말 없이 위 형식의 결과만 출력해줘.`;
+ try{await navigator.clipboard.writeText(prompt);document.getElementById('copyMsg').textContent='✓ 요청문이 복사됐어요. 이 캡처와 함께 ChatGPT에 붙여넣어 주세요.'}
+ catch(e){promptFallback(prompt)}
+}
+function promptFallback(text){let ta=document.createElement('textarea');ta.value=text;document.body.appendChild(ta);ta.select();document.execCommand('copy');ta.remove();let m=document.getElementById('copyMsg');if(m)m.textContent='✓ 요청문이 복사됐어요.'}
+function parseBlocks(text){
+ let starts=[...text.matchAll(/문제번호\s*[:：]/g)].map(x=>x.index); if(!starts.length)return[];
+ return starts.map((s,i)=>text.slice(s,starts[i+1]??text.length).trim()).map(block=>{
+   let get=label=>{let m=block.match(new RegExp(label+'\\\\s*[:：]\\\\s*(.*)'));return m?m[1].trim():''};
+   return {question:get('문제번호').replace(/[^0-9]/g,''),subject:get('과목')||'확인 필요',reason:get('틀린 이유')||'확인 필요',concept:get('핵심 개념')||'',memo:get('메모')||''}
+ }).filter(x=>x.question)
+}
+window.importAnalysis=()=>{
+ let items=parseBlocks(document.getElementById('analysis').value);
+ if(!items.length){alert('문제번호를 찾지 못했어요. ChatGPT 결과 형식을 확인해 주세요.');return}
+ items.forEach(x=>state.wrongs.push({u:tab,d:today(),question:x.question,subject:x.subject,reason:x.reason,concept:x.concept,memo:x.memo}));
+ save();alert(items.length+'개의 오답을 등록했어요.');closeM()
+}
+document.addEventListener('click',function(e){
+ const del=e.target.closest('[data-delete-type]');
+ if(del){
+   e.preventDefault();
+   e.stopPropagation();
+   askDeleteRecord(del.dataset.deleteType, Number(del.dataset.deleteIndex));
+   return;
+ }
+ const ok=e.target.closest('[data-confirm-delete-type]');
+ if(ok){
+   e.preventDefault();
+   e.stopPropagation();
+   performDeleteRecord(ok.dataset.confirmDeleteType, Number(ok.dataset.confirmDeleteIndex));
+ }
+});
+render();
+})();
+</script></body></html>
