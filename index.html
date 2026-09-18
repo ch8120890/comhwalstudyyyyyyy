@@ -139,6 +139,13 @@
 .status-progress{background:#eef0f4;color:#667085}
 .quiz-actions{display:flex;gap:8px;margin-top:12px}
 .quiz-actions .btn{flex:1}
+
+.bulk-area{min-height:230px;font-family:inherit;line-height:1.55}
+.bulk-example{font-size:12px;line-height:1.65;color:var(--muted);background:#f7f8fa;border-radius:12px;padding:12px;margin:10px 0}
+.bulk-preview{max-height:48vh;overflow:auto;margin-top:12px}
+.bulk-item{background:#fff;border:1px solid var(--line);border-radius:14px;padding:12px;margin:8px 0}
+.bulk-item-title{font-weight:850;margin-bottom:5px}
+.choice-edit-row{display:flex;gap:6px;margin-bottom:7px}.choice-edit-row input{flex:1}.choice-edit-row button{width:auto}
 </style>
 </head>
 <body><div id="app"></div>
@@ -150,7 +157,7 @@ const subjects=['전체','컴퓨터 일반','스프레드시트 일반','데이�
 let state=JSON.parse(localStorage.getItem(KEY)||'null')||{settings:{hana:{examDate:'',weeklyGoal:4},hyung:{examDate:'',weeklyGoal:4}},readings:[],exams:[],wrongs:[],minutes:[]};
 state.messages=Array.isArray(state.messages)?state.messages:[];
 state.wrongs=Array.isArray(state.wrongs)?state.wrongs:[];
-state.wrongs=state.wrongs.map(x=>Object.assign({questionText:'',choices:['','','',''],answer:'',quizCorrect:0,quizWrong:0,repeatWrong:false},x));
+state.wrongs=state.wrongs.map(x=>Object.assign({questionText:'',choices:[],answer:'',quizCorrect:0,quizWrong:0,repeatWrong:false},x));
 let tab='hana', modal=null;
 let calCursor=new Date(); let selectedCalDate=null;
 const save=()=>localStorage.setItem(KEY,JSON.stringify(state));
@@ -229,9 +236,9 @@ window.showWrongQuiz=function(){
    modal=`<div class="modal"><div class="sheet"><h3>오늘의 오답 퀴즈 완료</h3><div class="capture-note">5회 정답 전까지 다음 퀴즈에도 계속 누적됩니다. 5/5가 된 문제는 오답노트의 해결완료에서 계속 볼 수 있어요.</div><button class="btn primary" style="width:100%;margin-top:14px" onclick="closeM()">완료</button></div></div>`;render();return;
  }
  let idx=q.ids[q.pos],x=state.wrongs[idx]; if(!x){q.pos++;showWrongQuiz();return;}
- let qc=Math.min(5,x.quizCorrect||0), choices=Array.isArray(x.choices)?x.choices:['','','',''];
- let hasFull=x.questionText&&choices.filter(Boolean).length===4&&String(x.answer||'').match(/^[1-4]$/);
- let opts=hasFull?choices.map((c,i)=>`<button class="option quiz-choice" data-quiz-choice="${i+1}" onclick="answerChoice(${i+1})">${['①','②','③','④'][i]} ${escapeHtml(c)}</button>`).join(''):`<div class="capture-note">이 오답은 예전 형식으로 등록되어 문제내용/보기/정답이 없어요. 수정에서 내용을 채우면 객관식 퀴즈로 풀 수 있어요.</div><div class="quiz-actions"><button class="btn outline" onclick="answerWrongQuiz(false)">또 틀림</button><button class="btn primary" onclick="answerWrongQuiz(true)">이번엔 맞음</button></div>`;
+ let qc=Math.min(5,x.quizCorrect||0), choices=Array.isArray(x.choices)?x.choices:[];
+ let hasFull=x.questionText&&choices.filter(Boolean).length>=2&&Number(x.answer)>=1&&Number(x.answer)<=choices.length;
+ let opts=hasFull?choices.map((c,i)=>`<button class="option quiz-choice" data-quiz-choice="${i+1}" onclick="answerChoice(${i+1})">${i+1}. ${escapeHtml(c)}</button>`).join(''):`<div class="capture-note">이 오답은 예전 형식으로 등록되어 문제내용/보기/정답이 없어요. 수정에서 내용을 채우면 객관식 퀴즈로 풀 수 있어요.</div><div class="quiz-actions"><button class="btn outline" onclick="answerWrongQuiz(false)">또 틀림</button><button class="btn primary" onclick="answerWrongQuiz(true)">이번엔 맞음</button></div>`;
  modal=`<div class="modal"><div class="sheet"><h3>오답 퀴즈</h3>
  <div class="quiz-card"><div class="quiz-progress">${q.pos+1} / ${q.ids.length} 문제</div><div class="quiz-meta">${x.year?x.year+'년 ':''}${x.round?x.round+'회 · ':''}${escapeHtml(x.question||'문제')}번</div>
  <div class="quiz-q">${escapeHtml(x.questionText||('문제 '+(x.question||'')) )}</div>
@@ -304,14 +311,14 @@ window.editRecord=(type,i)=>{
  let x,body='';
  if(type==='reading'){x=state.readings[i];body=`<h3>회독 기록 수정</h3><div class="field"><label>날짜</label><input id="ed" type="date" value="${x.d}"></div><div class="field"><label>회독 횟수</label><input id="ecount" type="number" min="1" value="${x.count}"></div>`}
  if(type==='exam'){x=state.exams[i];body=`<h3>기출 기록 수정</h3><div class="field"><label>날짜</label><input id="ed" type="date" value="${x.d}"></div><div class="field"><label>연도</label><input id="eyear" type="number" value="${x.year}"></div><div class="field"><label>회차</label><input id="eround" type="number" value="${x.round}"></div><div class="field"><label>총 문제 수</label><input id="etotal" type="number" value="${x.total}"></div><div class="field"><label>오답 개수</label><input id="ewrong" type="number" min="0" value="${x.wrongCount??(x.total-x.correct)}"></div>`}
- if(type==='wrong'){x=state.wrongs[i];let ch=Array.isArray(x.choices)?x.choices:['','','',''];body=`<h3>오답 기록 수정</h3><div class="field"><label>날짜</label><input id="ed" type="date" value="${x.d}"></div><div class="field"><label>문제번호</label><input id="eq" value="${escapeHtml(x.question||'')}"></div><div class="field"><label>문제내용</label><textarea id="eqtext">${escapeHtml(x.questionText||'')}</textarea></div>${ch.map((v,j)=>`<div class="field"><label>보기 ${j+1}</label><input id="echoice${j+1}" value="${escapeHtml(v)}"></div>`).join('')}<div class="field"><label>정답</label><select id="eanswer">${[1,2,3,4].map(n=>`<option value="${n}" ${String(x.answer)===String(n)?'selected':''}>${n}번</option>`).join('')}</select></div>`}
+ if(type==='wrong'){x=state.wrongs[i];let ch=Array.isArray(x.choices)&&x.choices.length?x.choices:['',''];body=`<h3>오답 기록 수정</h3><div class="field"><label>날짜</label><input id="ed" type="date" value="${x.d}"></div><div class="field"><label>문제번호</label><input id="eq" value="${escapeHtml(x.question||'')}"></div><div class="field"><label>문제내용</label><textarea id="eqtext">${escapeHtml(x.questionText||'')}</textarea></div>${ch.map((v,j)=>`<div class="field"><label>보기 ${j+1}</label><input id="echoice${j+1}" value="${escapeHtml(v)}"></div>`).join('')}<div class="field"><label>정답 보기 번호</label><input id="eanswer" type="number" min="1" max="${ch.length}" value="${escapeHtml(x.answer||'1')}"></div>`}
  if(type==='minutes'){x=state.minutes[i];body=`<h3>공부시간 수정 <span class="sub">(선택)</span></h3><div class="field"><label>날짜</label><input id="ed" type="date" value="${x.d}"></div><div class="field"><label>공부한 시간(분)</label><input id="emm" type="number" min="0" value="${x.m}"></div>`}
  modal=`<div class="modal" onclick="if(event.target===this)closeM()"><div class="sheet">${body}<button class="btn primary" onclick="saveEdit('${type}',${i})">수정 저장</button><button class="btn outline" style="width:100%;margin-top:8px" onclick="closeM()">취소</button></div></div>`;render()
 }
 window.saveEdit=(type,i)=>{
  if(type==='reading'){let x=state.readings[i];x.d=document.getElementById('ed').value;x.count=Math.max(1,+document.getElementById('ecount').value||1)}
  if(type==='exam'){let x=state.exams[i],total=Math.max(1,+document.getElementById('etotal').value||1),wc=Math.max(0,+document.getElementById('ewrong').value||0);wc=Math.min(total,wc);x.d=document.getElementById('ed').value;x.year=+document.getElementById('eyear').value;x.round=+document.getElementById('eround').value;x.total=total;x.wrongCount=wc;x.correct=total-wc}
- if(type==='wrong'){let x=state.wrongs[i];x.d=document.getElementById('ed').value;x.question=document.getElementById('eq').value;x.questionText=document.getElementById('eqtext').value;x.choices=[1,2,3,4].map(n=>document.getElementById('echoice'+n).value);x.answer=document.getElementById('eanswer').value}
+ if(type==='wrong'){let x=state.wrongs[i];x.d=document.getElementById('ed').value;x.question=document.getElementById('eq').value;x.questionText=document.getElementById('eqtext').value;x.choices=Array.from(document.querySelectorAll('[id^="echoice"]')).map(e=>e.value.trim()).filter(Boolean);x.answer=document.getElementById('eanswer').value}
  if(type==='minutes'){let x=state.minutes[i];x.d=document.getElementById('ed').value;x.m=Math.max(0,+document.getElementById('emm').value||0)}
  save();closeM()
 }
@@ -369,18 +376,85 @@ window.go=t=>{tab=t;modal=null;render()}
 window.openM=t=>{if(tab==='together')return;let body='';
  if(t==='reading')body=`<h3>필기 요약본 회독</h3><div class="capture-note">20페이지 요약본을 오늘 몇 회독했는지만 기록해요.</div><div class="field"><label>오늘 회독 횟수</label><input id="count" type="number" min="1" value="1"></div><button class="btn primary" onclick="saveReading()">저장</button>`;
  if(t==='exam')body=`<h3>기출 기록</h3><div class="field"><label>연도</label><input id="year" type="number" value="${new Date().getFullYear()-2}"></div><div class="field"><label>회차</label><input id="round" type="number" value="1"></div><div class="field"><label>총 문제 수</label><input id="total" type="number" value="60"></div><div class="field"><label>오답 개수</label><input id="wrongCount" type="number" min="0" value="0"></div><div class="capture-note">저장하면 정답 수와 정답률을 자동 계산하고, 오답이 있으면 바로 오답노트 등록 화면으로 넘어가요.</div><button class="btn primary" onclick="saveExam()">저장하고 다음</button>`;
- if(t==='wrong')body=`<h3>오답 등록</h3><div class="capture-note">ChatGPT에서 추출한 문제내용·보기·정답을 그대로 입력하면 내일부터 객관식 오답 퀴즈에 나와요.</div><div class="field"><label>문제번호</label><input id="q" placeholder="예: 12"></div><div class="field"><label>문제내용</label><textarea id="qtext" placeholder="문제 내용을 붙여넣어 주세요."></textarea></div>${[1,2,3,4].map(n=>`<div class="field"><label>보기 ${n}</label><input id="choice${n}" placeholder="${n}번 보기"></div>`).join('')}<div class="field"><label>정답</label><select id="answer"><option value="1">1번</option><option value="2">2번</option><option value="3">3번</option><option value="4">4번</option></select></div><button class="btn primary" onclick="saveWrong()">오답 저장</button>`;
+ if(t==='wrong')body=`<h3>오답 등록</h3>
+    <div class="capture-note">여러 문제를 한 번에 붙여넣어도 저장 후에는 문제별로 각각 분리되어 수정·삭제·퀴즈 관리됩니다.</div>
+    <button class="btn primary" style="width:100%;margin-top:12px" onclick="openBulkWrong()">여러 문제 일괄등록</button>
+    <button class="btn outline" style="width:100%;margin-top:8px" onclick="openSingleWrong()">한 문제 개별등록</button>`;
  if(t==='minutes')body=`<h3>공부시간 기록 <span class="sub">(선택)</span></h3><div class="capture-note">공부시간은 입력하지 않아도 학습 기록을 저장할 수 있어요.</div><div class="field"><label>공부한 시간(분)</label><input id="mm" type="number" min="0" value="${mins(tab)}"></div><button class="btn primary" onclick="saveMinutes()">저장</button>`;
  modal=`<div class="modal" onclick="if(event.target===this)closeM()"><div class="sheet">${body}<button class="btn outline" style="width:100%;margin-top:8px" onclick="closeM()">닫기</button></div></div>`;render()}
 window.closeM=()=>{modal=null;render()}
 window.saveReading=()=>{selectedPersonalDate=today();state.readings.push({u:tab,d:today(),subject:'필기 요약본',count:+document.getElementById('count').value||1});save();closeM()}
 window.saveExam=()=>{selectedPersonalDate=today();let total=+document.getElementById('total').value||60,wc=Math.max(0,+document.getElementById('wrongCount').value||0);wc=Math.min(total,wc);let correct=total-wc,year=+document.getElementById('year').value,round=+document.getElementById('round').value;state.exams.push({u:tab,d:today(),year,round,total,correct,wrongCount:wc});save();if(wc>0){openWrongAfterExam(year,round,wc)}else{closeM()}}
+
+window.openSingleWrong=function(prefill){
+ prefill=prefill||{}; window.singleChoices=Array.isArray(prefill.choices)&&prefill.choices.length?prefill.choices.slice():['','','',''];
+ modal=`<div class="modal"><div class="sheet"><h3>오답 개별등록</h3>
+ <div class="field"><label>문제번호</label><input id="q" value="${escapeHtml(prefill.question||'')}" placeholder="예: 12"></div>
+ <div class="field"><label>문제내용</label><textarea id="qtext" placeholder="문제 내용을 입력해 주세요.">${escapeHtml(prefill.questionText||'')}</textarea></div>
+ <div id="singleChoiceFields"></div>
+ <button class="btn outline" style="width:100%;margin-bottom:12px" onclick="addSingleChoice()">+ 보기 추가</button>
+ <div class="field"><label>정답 보기 번호</label><input id="answer" type="number" min="1" value="${escapeHtml(prefill.answer||'1')}" placeholder="예: 4"></div>
+ <button class="btn primary" style="width:100%" onclick="saveWrong()">오답 저장</button></div></div>`;render();renderSingleChoices();
+}
+window.renderSingleChoices=function(){
+ let box=document.getElementById('singleChoiceFields');if(!box)return;
+ box.innerHTML=window.singleChoices.map((v,i)=>`<div class="choice-edit-row"><input id="choice${i}" value="${escapeHtml(v)}" placeholder="보기 ${i+1}"><button class="btn outline" onclick="removeSingleChoice(${i})">삭제</button></div>`).join('');
+}
+window.syncSingleChoices=function(){window.singleChoices=window.singleChoices.map((v,i)=>{let e=document.getElementById('choice'+i);return e?e.value:v})}
+window.addSingleChoice=function(){syncSingleChoices();window.singleChoices.push('');renderSingleChoices()}
+window.removeSingleChoice=function(i){syncSingleChoices();if(window.singleChoices.length<=2){alert('보기는 최소 2개가 필요해요.');return}window.singleChoices.splice(i,1);renderSingleChoices()}
+
+window.openBulkWrong=function(){
+ modal=`<div class="modal"><div class="sheet"><h3>오답 일괄등록</h3>
+ <div class="capture-note">ChatGPT에서 아래 형식으로 여러 문제를 정리한 뒤 통째로 붙여넣어 주세요. 보기 개수는 제한 없습니다.</div>
+ <div class="bulk-example">문제번호: 12<br>문제내용: 다음 중 ...?<br>보기: ① 첫 번째 보기<br>보기: ② 두 번째 보기<br>보기: ③ 세 번째 보기<br>보기: ④ 네 번째 보기<br>정답: 3<br><br>문제번호: 17<br>문제내용: ...<br>보기: ① ...<br>보기: ② ...<br>정답: 2</div>
+ <div class="field"><textarea id="bulkWrongText" class="bulk-area" placeholder="여기에 여러 문제를 한 번에 붙여넣어 주세요."></textarea></div>
+ <button class="btn primary" style="width:100%" onclick="previewBulkWrong()">문제별로 나누기</button></div></div>`;render();
+}
+window.parseBulkWrongs=function(text){
+ let lines=text.replace(/\r/g,'').split('\n'), out=[],cur=null;
+ function push(){if(cur&&(cur.question||cur.questionText)){cur.choices=cur.choices.filter(Boolean);out.push(cur)}}
+ lines.forEach(raw=>{
+   let line=raw.trim(); if(!line)return;
+   let m=line.match(/^문제번호\s*[:：]\s*(.+)$/);
+   if(m){push();cur={question:m[1].replace(/[^0-9]/g,''),questionText:'',choices:[],answer:''};return}
+   if(!cur)return;
+   m=line.match(/^문제내용\s*[:：]\s*(.*)$/);if(m){cur.questionText=m[1].trim();return}
+   m=line.match(/^보기\s*[:：]\s*(.*)$/);if(m){cur.choices.push(m[1].replace(/^[①②③④⑤⑥⑦⑧⑨⑩\d]+[\.\)\s]*/,'').trim());return}
+   m=line.match(/^[①②③④⑤⑥⑦⑧⑨⑩]\s*(.*)$/);if(m){cur.choices.push(m[1].trim());return}
+   m=line.match(/^정답\s*[:：]\s*(.+)$/);if(m){let z=m[1].match(/\d+/);cur.answer=z?z[0]:'';return}
+   if(cur.questionText)cur.questionText+=' '+line;
+ });
+ push();return out;
+}
+window.previewBulkWrong=function(){
+ let text=document.getElementById('bulkWrongText').value,items=parseBulkWrongs(text);
+ if(!items.length){alert('문제를 인식하지 못했어요. 예시 형식을 확인해 주세요.');return}
+ window.bulkWrongItems=items;
+ modal=`<div class="modal"><div class="sheet"><h3>${items.length}문제 인식 완료</h3><div class="capture-note">등록하면 각 문제가 개별 오답으로 저장됩니다. 잘못된 문제는 등록 후 각각 수정할 수 있어요.</div>
+ <div class="bulk-preview">${items.map((x,i)=>`<div class="bulk-item"><div class="bulk-item-title">${escapeHtml(x.question||'?')}번 · 보기 ${x.choices.length}개 · 정답 ${escapeHtml(x.answer||'?')}번</div><div>${escapeHtml(x.questionText||'문제내용 없음')}</div><button class="btn outline" style="margin-top:8px" onclick="editBulkItem(${i})">이 문제 확인/수정</button></div>`).join('')}</div>
+ <button class="btn primary" style="width:100%;margin-top:12px" onclick="saveBulkWrongs()">문제별로 일괄 저장</button>
+ <button class="btn outline" style="width:100%;margin-top:8px" onclick="openBulkWrong()">다시 붙여넣기</button></div></div>`;render();
+}
+window.editBulkItem=function(i){let x=window.bulkWrongItems[i];window.bulkEditIndex=i;openSingleWrong(x)}
+window.saveBulkWrongs=function(){
+ let items=window.bulkWrongItems||[];let valid=items.filter(x=>x.question&&x.questionText&&x.choices.length>=2&&Number(x.answer)>=1&&Number(x.answer)<=x.choices.length);
+ if(valid.length!==items.length){alert('문제내용, 보기(최소 2개), 정답이 빠진 문제가 있어요. 각 문제를 확인해 주세요.');return}
+ valid.forEach(x=>state.wrongs.push({u:tab,d:today(),question:x.question,questionText:x.questionText,choices:x.choices,answer:String(x.answer),quizCorrect:0,quizWrong:0,repeatWrong:false}));
+ save();window.bulkWrongItems=[];closeM();alert(valid.length+'문제가 각각 개별 오답으로 등록됐어요. 내일부터 퀴즈에 나옵니다.');
+}
 window.saveWrong=()=>{
- selectedPersonalDate=today();
- let q=document.getElementById('q').value.trim(),qt=document.getElementById('qtext').value.trim(),choices=[1,2,3,4].map(n=>document.getElementById('choice'+n).value.trim()),answer=document.getElementById('answer').value;
- if(!q||!qt||choices.some(x=>!x)){alert('문제번호, 문제내용, 보기 4개를 모두 입력해 주세요.');return}
- state.wrongs.push({u:tab,d:today(),question:q,questionText:qt,choices,answer,quizCorrect:0,quizWrong:0,repeatWrong:false});
- save();closeM()
+ syncSingleChoices();
+ let q=document.getElementById('q').value.trim(),qt=document.getElementById('qtext').value.trim(),choices=window.singleChoices.map(x=>x.trim()).filter(Boolean),answer=document.getElementById('answer').value.trim();
+ if(!q||!qt||choices.length<2){alert('문제번호, 문제내용, 보기 2개 이상을 입력해 주세요.');return}
+ if(Number(answer)<1||Number(answer)>choices.length){alert('정답 번호가 보기 개수 안에 있어야 해요.');return}
+ let item={question:q,questionText:qt,choices,answer};
+ if(Number.isInteger(window.bulkEditIndex)&&window.bulkWrongItems){
+   window.bulkWrongItems[window.bulkEditIndex]=item;window.bulkEditIndex=null;
+   let items=window.bulkWrongItems;
+   modal=`<div class="modal"><div class="sheet"><h3>${items.length}문제 확인</h3><div class="bulk-preview">${items.map((x,i)=>`<div class="bulk-item"><div class="bulk-item-title">${escapeHtml(x.question)}번 · 보기 ${x.choices.length}개 · 정답 ${escapeHtml(x.answer)}번</div><div>${escapeHtml(x.questionText)}</div><button class="btn outline" style="margin-top:8px" onclick="editBulkItem(${i})">이 문제 확인/수정</button></div>`).join('')}</div><button class="btn primary" style="width:100%;margin-top:12px" onclick="saveBulkWrongs()">문제별로 일괄 저장</button></div></div>`;render();return;
+ }
+ state.wrongs.push({u:tab,d:today(),...item,quizCorrect:0,quizWrong:0,repeatWrong:false});save();closeM()
 }
 window.saveMinutes=()=>{selectedPersonalDate=today();let x=state.minutes.find(x=>x.u===tab&&x.d===today()),m=Math.max(0,+document.getElementById('mm').value||0);x?x.m=m:state.minutes.push({u:tab,d:today(),m});save();closeM()}
 window.saveSettings=()=>{state.settings[tab].examDate=document.getElementById('examDate').value;state.settings[tab].weeklyGoal=Math.max(1,Math.min(7,+document.getElementById('goal').value||4));save();render()}
